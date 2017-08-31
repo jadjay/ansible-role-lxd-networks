@@ -1,0 +1,48 @@
+---
+#- name: Set Description
+#  shell: "lxc network set {{ oitem.name }} description '{{ oitem.description }}'"
+#- name: set localhost
+#  set_fact:
+#    localhost: "{{ lookup('pipe', 'hostname') }}"
+- name: debug local_hostname
+  debug:
+    var: 
+      - lxd_networks_local_hostname
+      - lxd_networks_local_ip
+- name: Set vxlan protocol
+  shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.protocol vxlan"
+- name: Set vxlan values
+  shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.id {{ oitem.vxlan }}"
+- name: Set vxlan remote
+  shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.remote {{ lxd_networks_local_ip }}"
+- name: Set vxlan local
+  shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.local {{ ansible_default_ipv4.address }}"
+- name: Set external interface
+  shell: "lxc network set {{ oitem.name }} bridge.external_interfaces {{ oitem.interface_phy  }}"
+  ignore_errors: yes
+- name: Check local vxlan device
+  set_fact:
+    local_dev: "{{ lookup('pipe','ip l sh dev to-{{ oitem.name }} ; echo -n' ) }}"
+- name: debug local_dev
+  debug:
+    var: local_dev
+- name: Set local vxlan
+  delegate_to: localhost
+  become: true
+  command: "ip link add to-{{ oitem.name }} type vxlan id {{ oitem.vxlan }}  remote {{ ansible_default_ipv4.address }} local {{ lxd_networks_local_ip }} dstport {{ lxd_networks_vxlan_port }}"
+  ignore_errors: true
+  when: local_dev == ""
+- name: Set up vxlan
+  delegate_to: localhost
+  become: true
+  command: "ip link set to-{{ oitem.name }} up"
+- name: get route
+  shell: "ip r s dev {{ oitem.name }} | awk '{print $1}'"
+  register: route
+- name: debug route
+  debug:
+    var: route
+- name: Set route to network
+  become: true
+  delegate_to: localhost
+  command: "ip r a {{ route.stdout }} dev to-{{ oitem.name }}"

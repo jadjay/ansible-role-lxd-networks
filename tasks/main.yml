@@ -1,0 +1,34 @@
+- name: Iterate the networks
+  include: crud.yml
+  with_items: "{{ lxd_networks }}"
+  loop_control:
+      loop_var: oitem
+
+
+
+
+
+
+
+
+
+
+#- name: Check variables
+#  debug: 
+##    var: item
+#    msg: "| network name: {{ item.name  }} - type: {{ item.type }} - vxlan number : {{ item.vxlan }} - external interface : {{ item.int }} - vlan number : {{ item.vlan  }}"
+#  with_items: "{{ lxd_networks }}"
+#- name: Do the VLANs
+#  include: vlan.yml
+#  when: vlan_item.vlan and vlan_item.int
+#  with_items: "{{ lxd_networks }}"
+#  loop_control:
+#      loop_var: vlan_item
+#- name: Do the locals
+#  include: local param= "{{item}}"
+#  when: item.int and no item.vlan
+#  with_items: "{{ lxd_networks }}"
+#- name: Do the privates 
+#  include: private param= "{{item}}"
+#  when: no item.int and no item.vlan
+#  with_items: "{{ lxd_networks }}"

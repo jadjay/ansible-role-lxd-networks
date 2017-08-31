@@ -1,0 +1,2 @@
+type: "openvswitch"
+lxd_networks_vxlan_port: "8472"

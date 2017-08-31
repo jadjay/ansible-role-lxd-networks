@@ -1,0 +1,17 @@
+- name: Check the network
+  set_fact:
+    net_list: "{{ lookup('pipe','lxc network list {{ inventory_hostname }}: | grep \" {{ oitem.name }} \"; echo -n ' ) }}"
+- name: Create the network
+  local_action: raw lxc network create "{{ inventory_hostname }}:{{ oitem.name }}"
+  when: net_list == ""
+- name: Select mode
+  include: "{{ oitem.mode }}.yml"
+
+#- name: Set the template
+#  template:
+#    src: "{{ oitem.mode }}.j2"
+#    dest: "/tmp/netconf_{{ oitem.name }}.yml"
+#- name: Config the network
+#  shell: cat "/tmp/netconf_{{ oitem.name }}.yml" | lxc network edit "{{ oitem.name }}" 
+#  args: 
+#    executable: /bin/bash
