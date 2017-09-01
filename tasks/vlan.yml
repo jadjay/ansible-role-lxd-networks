@@ -1,40 +1,39 @@
 ---
-- name: Create VLAN network
-  debug:
-      var:  oitem
-#     #- name: Set Description
-#     #  shell: "lxc network set {{ oitem.name }} description '{{ oitem.description }}'"
-#     #- name: set localhost
-#     #  set_fact:
-#     #    localhost: "{{ lookup('pipe', 'hostname') }}"
-#     - name: debug local_hostname
-#       debug:
-#         var: 
-#           - lxd_networks_local_hostname
-#           - lxd_networks_local_ip
+# On ajoute le vxlan si il a été demandé (un nombre définissant le vxlan id)
 - name: Ajouter le vxlan
   include: vxlan.yml
   when: "{{ oitem.vxlan }}"
+# On crée l'interface de type vlan
 - name: Set vlan interface
   become: true
   command: "ip link add link {{ oitem.interface_phy }} name vlan-{{ oitem.vlan_id }} type vlan id {{ oitem.vlan_id }}"
   ignore_errors: true
+# on active l'interface
 - name: Set up vlan interface
   become: true
   command: "ip link set vlan-{{ oitem.vlan_id }} up"
+# on supprime toute adresse IP
 - name: Flush ips of vlan interface
   become: true
   command: "ip a flush dev vlan-{{ oitem.vlan_id }}"
+# On ajoute l'interface dans le réseau
 - name: Set external interface
   shell: "lxc network set {{ oitem.name }} bridge.external_interfaces vlan-{{ oitem.vlan_id  }}"
+# on supprime les adresses ipv4
 - name: Delete ipv4 
   shell: "lxc network unset {{ oitem.name }} ipv4.address"
+# on supprime les adresses ipv6
 - name: Delete ipv6 
   shell: "lxc network unset {{ oitem.name }} ipv6.address"
+# on supprime le nat ipv4
 - name: Delete ipv4.nat 
   shell: "lxc network unset {{ oitem.name }} ipv4.nat"
+# on supprime le nat ipv6
 - name: Delete ipv6.nat 
   shell: "lxc network unset {{ oitem.name }} ipv6.nat"
-- name: debug route
-  debug:
-    var: route
+# on active le routage ipv4
+- name: Set ipv4 routing
+  shell: "lxc network set {{ oitem.name }} ipv4.routing true"
+# on active le routage ipv6
+- name: Set ipv4 routing
+  shell: "lxc network set {{ oitem.name }} ipv4.routing true"

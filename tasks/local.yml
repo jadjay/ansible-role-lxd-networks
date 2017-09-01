@@ -1,17 +1,24 @@
 ---
+# On ajoute le vxlan si il a été demandé (un nombre définissant le vxlan id)
+- name: Ajouter le vxlan
+  include: vxlan.yml
+  when: "{{ oitem.vxlan }}"
+# On ajoute au réseau l'interface physique si elle a été défini
+- name: Set external interface
+  shell: "lxc network set {{ oitem.name }} bridge.external_interfaces {{ oitem.interface_phy  }}"
+  ignore_errors: yes
+  when: "{{ oitem.interface_phy }}"
+# On definit le réseau routable ou non
+- name: Set not routing
+  shell: "lxc network set {{ oitem.name }} ipv4.routing false"
+  when: not route
+- name: Set routing
+  shell: "lxc network set {{ oitem.name }} ipv4.routing true"
+  when: route
+
+
 #- name: Set Description
 #  shell: "lxc network set {{ oitem.name }} description '{{ oitem.description }}'"
 #- name: set localhost
 #  set_fact:
 #    localhost: "{{ lookup('pipe', 'hostname') }}"
-- name: debug local_hostname
-  debug:
-    var: 
-      - lxd_networks_local_hostname
-      - lxd_networks_local_ip
-- name: Ajouter le vxlan
-  include: vxlan.yml
-  when: "{{ oitem.vxlan }}"
-- name: debug route
-  debug:
-    var: route

@@ -1,40 +1,44 @@
 ---
+# On définit le protocole de tunnel VXLAN
 - name: Set vxlan protocol
   shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.protocol vxlan"
+# On attribue le vxlan ID (doit être unique)
 - name: Set vxlan values
   shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.id {{ oitem.vxlan }}"
+# On définit l'ip remote de l'hote ansible
 - name: Set vxlan remote
   shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.remote {{ lxd_networks_local_ip }}"
+# On définit l'ip local de l'hote LXD
 - name: Set vxlan local
   shell: "lxc network set {{ oitem.name }} tunnel.{{ lxd_networks_local_hostname }}.local {{ ansible_default_ipv4.address }}"
-- name: Set external interface
-  shell: "lxc network set {{ oitem.name }} bridge.external_interfaces {{ oitem.interface_phy  }}"
-  ignore_errors: yes
+
+# En local maintenant pour créer une route de l'hote ansible vers l'hote lxd
+
+# On vérifie que l'interface n'existe pas
 - name: Check local vxlan device
   set_fact:
     local_dev: "{{ lookup('pipe','ip l sh dev to-{{ oitem.name }} ; echo -n' ) }}"
-- name: debug local_dev
-  debug:
-    var: local_dev
+# On crée l'interface de type VXLAN avec le bon ID le bon remote (LXD) et le bon local (ansible) SI elle n'existe pas
 - name: Set local vxlan
   delegate_to: localhost
   become: true
   command: "ip link add to-{{ oitem.name }} type vxlan id {{ oitem.vxlan }}  remote {{ ansible_default_ipv4.address }} local {{ lxd_networks_local_ip }} dstport {{ lxd_networks_vxlan_port }}"
   ignore_errors: true
   when: local_dev == ""
+# on active l'interface
 - name: Set up vxlan
   delegate_to: localhost
   become: true
   command: "ip link set to-{{ oitem.name }} up"
+# On récupère le réseau IP du réseau
 - name: get route
   shell: "ip r s dev {{ oitem.name }} | awk '{print $1}'"
   register: route
+# on vérifie que la route n'existe pas
 - name: Check local vxlan device
   set_fact:
     local_route: "{{ lookup('pipe','ip r sh dev to-{{ oitem.name }} ; echo -n' ) }}"
-- name: debug local_route
-  debug:
-    var: local_
+# On définit la route sur la nouvelle interface
 - name: Set route to network
   become: true
   delegate_to: localhost
