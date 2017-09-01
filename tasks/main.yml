@@ -1,5 +1,15 @@
-- name: Iterate the networks
-  include: crud.yml
+# On vérifie que le réseau n'existe pas
+- name: Check the network
+  command: "lxc network list | grep \" {{ oitem.name }} \""
+	register: net_list
+# On crée le réseau SI il n'existe pas
+- name: Create the network
+  command: "lxc network create {{ oitem.name }}"
+	when: net_list == ""
+# On parse les réseaux définis sur le porte-conteneur, et on les envois sur la liste des tâches correspondant au type de réseau
+# local ou vlan
+- name: Select mode
+  include: "{{ oitem.mode }}.yml"
   with_items: "{{ lxd_networks }}"
   loop_control:
       loop_var: oitem
@@ -11,7 +21,27 @@
 
 
 
+# Pour mémoire
 
+#     #- name: Set Description
+#     #  shell: "lxc network set {{ oitem.name }} description '{{ oitem.description }}'"
+#     #- name: set localhost
+#     #  set_fact:
+#     #    localhost: "{{ lookup('pipe', 'hostname') }}"
+#     - name: debug local_hostname
+#       debug:
+#         var: 
+#           - lxd_networks_local_hostname
+#           - lxd_networks_local_ip
+
+#- name: Set the template
+#  template:
+#    src: "{{ oitem.mode }}.j2"
+#    dest: "/tmp/netconf_{{ oitem.name }}.yml"
+#- name: Config the network
+#  shell: cat "/tmp/netconf_{{ oitem.name }}.yml" | lxc network edit "{{ oitem.name }}" 
+#  args: 
+#    executable: /bin/bash
 
 #- name: Check variables
 #  debug: 
