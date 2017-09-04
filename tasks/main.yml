@@ -5,7 +5,7 @@
 # On crée le réseau SI il n'existe pas
 - name: Create the network
   command: "lxc network create {{ oitem.name }}"
-	when: net_list == ""
+	when: net_list.stdout == ""
 # On parse les réseaux définis sur le porte-conteneur, et on les envois sur la liste des tâches correspondant au type de réseau
 # local ou vlan
 - name: Select mode
