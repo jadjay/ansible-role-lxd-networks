@@ -1,0 +1,35 @@
+config:
+	bridge.driver: openvswitch
+	bridge.external_interfaces: {{ bridge.external_interfaces }}
+	bridge.mtu: {{ bridge.external_interfaces }}
+	bridge.mode: "standard"
+	fan.underlay_subnet: 
+	fan.overlay_subnet:
+	fan.type:
+	tunnel.{{ lxd_network.name }}.protocol: "vxlan"
+	tunnel.{{ lxd_network.name }}.local:
+	tunnel.{{ lxd_network.name }}.remote:
+#	tunnel.{{ lxd_network.name }}.group:
+#	tunnel.{{ lxd_network.name }}.port:
+	tunnel.{{ lxd_network.name }}.id:
+#	tunnel.{{ lxd_network.name }}.interface:
+	ipv4.address: "auto"
+	ipv4.nat: "false"
+	ipv4.dhcp: "true"
+#	ipv4.dhcp.expiry:
+#	ipv4.dhcp.ranges:
+#	ipv4.firewall:
+#	ipv4.routes:
+	ipv4.routing: "true"
+	ipv6.address: "none"
+#	ipv6.nat: 
+#	ipv6.dhcp:
+#	ipv6.dhcp.expiry:
+#	ipv6.dhcp.stateful:
+#	ipv6.dhcp.ranges:
+#	ipv6.firewall:
+#	ipv6.routes:
+#	ipv6.routing:
+	dns.domain: "lxd"
+	dns.mode: "managed"
+	raw.dnsmasq: ""
